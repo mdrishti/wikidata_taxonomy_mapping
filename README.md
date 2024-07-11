@@ -1,4 +1,4 @@
-# wd_mapping
+# wikidata mapping to taxonomy from ott and other databases
 The scripts aid in  mapping of wikidata ids to taxonomic ids from 11 other databases (ott, gbif, ncbi, eol, itis, irmng, col, bold, worms, plazi, apni).
 
 A couple of R packages are required to run the scripts, mainly `WikidataQueryServiceR`, `glue`,`dplyr`, `httr`, `rotl`, `taxizedb`, and `dbplyr`.
