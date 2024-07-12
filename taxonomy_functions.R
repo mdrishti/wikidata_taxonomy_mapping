@@ -11,6 +11,7 @@ library(dbplyr)
 library(WikidataQueryServiceR)
 library(glue)
 library(httr)
+library(tidyverse)
 
 
 
@@ -123,7 +124,8 @@ runSparql <- function(ottId) {
 #In case WikidataQueryServiceR fails, use the following function
 querki <- function(query) {
 	  h="text/csv"
-	  response <- httr::GET(url = "https://query.wikidata.org/sparql", query = list(query = query), httr::add_headers(Accept = h))
+	  response <- httr::GET(url = "https://qlever.cs.uni-freiburg.de/wikidata/sparql", query = list(query = query), httr::add_headers(Accept = h))
+	  #response <- httr::GET(url = "https://query.wikidata.org/sparql", query = list(query = query), httr::add_headers(Accept = h))
 	  return(httr::content(response))
 }
 
