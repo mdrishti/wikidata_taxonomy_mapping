@@ -35,25 +35,58 @@ write.csv(df.Wdfull, "all_wd_eol_ncbi_gbif_andOthers_mapping_SPARQL.txt", row.na
 
 ##########################################Integration with data from otl#############################################
 #read ott taxonomy and resolve ncbi and gbif mapping within the taxonomy file
-df.otol <- read.csv("ott3.6/taxonomy.tsv",header=TRUE,row.names=NULL, sep="|")
+df.otol <- read.csv("../ott3.6/taxonomy.tsv",header=TRUE,row.names=NULL, sep="|")
 df.otol <- df.otol[,c(1,3,5)]
 df.otol$sourceinfo <- gsub("\t","",df.otol$sourceinfo) 
 df.otol$name <- gsub("\t","",df.otol$name) 
 
-df.otolX <- extrV1(c("ncbi:","gbif:"),data.frame(Ids=df.otol[,3]))
-names(df.otolX) <- c("ncbi","gbif")
-df.otolY <- data.frame(ott_id=as.numeric(df.otol$uid),ncbi=df.otolX$ncbi,gbif=df.otolX$gbif, OttName=df.otol$name)
+df.otolX <- extrV1(c("ncbi:","gbif:","irmng:","worms:"),data.frame(Ids=df.otol[,3]))
+names(df.otolX) <- c("ncbi","gbif","irmng","worms")
+df.otolY <- data.frame(ott_id=as.numeric(df.otol$uid),ncbi=df.otolX$ncbi,gbif=df.otolX$gbif, irmng=df.otolX$irmng, worms=df.otolX$worms, OttName=df.otol$name)
 
-#full-join the sparql and otol.ott tables
-df.otol.wd <- full_join(df.Wdfull,df.otolY, by=c("ott"="ott_id"), suffix=c(".wd",".ott"), na_matches="never") #all wd ids mapping to 11 dbs, but also ott not matching to wd
+
+################################################
+#left-join the sparql and otol.ott tables, but take care that the matching is done by both ncbi and ott. Hack is to firt do anti-join on ott, then join by ncbi and coalesce ott ids, and then join on ott with the original ott df. This is not the most efficiet, but it gets the job done.
+#anti-join on ott
+df.otolZ <- anti_join(df.otolY,df.Wdfull, by=c("ott_id"="ott")) #ott not matching-2603918
+df.otolZ$ncbi <- as.double(df.otolZ$ncbi)
+#join on ncbi with results of anti-join
+df.otol.wd1 <- left_join(df.Wdfull,df.otolZ, by=c("ncbi"="ncbi"), suffix=c(".wd",".ott"), na_matches="never") %>%
+	  mutate(ottJoined = coalesce(ott_id, ott))
+#check how many left unjoined on ncbi
+df.otol.wd1.aj <- anti_join(df.otolZ,df.Wdfull, by=c("ncbi"="ncbi")) #1420011
+
+#join ncbi-joined and original ott df on ott.
+df.otol.wd.lj <- left_join(df.otol.wd1,df.otolY, by=c("ottJoined"="ott_id"), suffix=c(".wd",".ott"), na_matches="never") #all wd ids mapping to 11 dbs, but also ott not matching to wd
+df.otol.wd <- full_join(df.otol.wd1,df.otolY, by=c("ottJoined"="ott_id"), suffix=c(".wd",".ott"), na_matches="never") #all wd ids mapping to 11 dbs, but also ott not matching to wd
+#check how many left unjoined on ott
+df.otolZ.still <- anti_join(df.otolY,df.otol.wd.lj, by=c("ott_id"="ottJoined")) #ott not matching --2550986
+
+#chek how many (un)common between anti-joins of ncbi and ott
+df.otolZ.still$ncbi <- as.double(df.otolZ.still$ncbi)
+df.otolZ.still$ott_id <- as.double(df.otolZ.still$ott_id)
+df.otolZ.nxbi.ott <- anti_join(df.otol.wd1.aj,df.otolZ.still, by=c("ott_id","ncbi")) #ott & ncbi not matching = 0. Good sign!
+
+################################################
+
 write.csv(df.otol.wd, "all_wd_eol_ncbi_gbif_andOthers_mapping_matchedOTT.txt", row.names=FALSE)
 
 
 #simple metrics to check number of unique ott-ids and wd-ids mapped
-ottU <- nrow(unique(df.otol.wd[which(is.na(df.otol.wd$WdID)==FALSE & is.na(df.otol.wd$ott)==FALSE),c("ott")])) #unique ott that have wd
-WdU <- nrow(unique(df.otol.wd[which(is.na(df.otol.wd$WdID)==FALSE & is.na(df.otol.wd$ott)==FALSE),c("WdID")])) #unique wd that have ott
-ottX <- nrow(unique(df.otol.wd[which(is.na(df.otol.wd$WdID)==TRUE & is.na(df.otol.wd$ott)==FALSE),c("ott")])) #unique ott that don't have wd
+ottU <- nrow(unique(df.otol.wd[which(is.na(df.otol.wd$WdID)==FALSE & is.na(df.otol.wd$ottJoined)==FALSE),c("ottJoined")])) #unique ott that have wd: 1924374 --> after anti-join technique-1977306
+WdU <- nrow(unique(df.otol.wd[which(is.na(df.otol.wd$WdID)==FALSE & is.na(df.otol.wd$ottJoined)==FALSE),c("WdID")])) #unique wd that have ott: 1958836 -->after anti-join technique-2011639
+ottX <- nrow(unique(df.otol.wd[which(is.na(df.otol.wd$WdID)==TRUE & is.na(df.otol.wd$ottJoined)==FALSE),c("ottJoined")])) #unique ott that don't have wd: 2603918 -->2550986
 
+
+ottY1 <- nrow(unique(df.otol.wd[which(df.otol.wd$ncbi.wd==df.otol.wd$ncbi.ott),c("ottJoined")])) #unique ott-ids that have the same ncbi mapping in both wd and ott: 465368 -->after anti-join- 519070
+ottY2 <- nrow(unique(df.otol.wd[which(df.otol.wd$gbif.wd==df.otol.wd$gbif),c("ottJoined")])) #unique ott-ids that have the same gbif mapping in both wd and ott: 1757020 -->after anti-join- 22144 (on mapping gbif.wd & gbif.ott)? & 1778420 (on mapping gbif.wd & gbif)
+ottZ1 <- nrow(unique(df.otol.wd[which(df.otol.wd$ncbi.wd!=df.otol.wd$ncbi.ott),c("ottJoined")])) #unique ott-ids that don't have the same ncbi mapping in both wd and ott: 4072 -->after anti-join-3966
+ottZ2 <- nrow(unique(df.otol.wd[which(df.otol.wd$gbif.wd!=df.otol.wd$gbif),c("ottJoined")])) #unique ott-ids that don't have the same gbif mapping in both wd and ott: 61516 -->after anti-join- 4001 (on mapping gbif.wd & gbif.ott)? & 65467 (on mapping gbif.wd & gbif) 
+
+WdY1 <- nrow(unique(df.otol.wd[which(df.otol.wd$ncbi.wd==df.otol.wd$ncbi.ott),c("WdID")])) #unique ott-ids that have the same ncbi mapping in both wd and ott: 465371 -->after anti-join-519052
+WdY2 <- nrow(unique(df.otol.wd[which(df.otol.wd$gbif.wd==df.otol.wd$gbif),c("WdID")])) #unique ott-ids that have the same gbif mapping in both wd and ott: 1758591 -->after anti-join-1779943 
+WdZ1 <- nrow(unique(df.otol.wd[which(df.otol.wd$ncbi.wd!=df.otol.wd$ncbi.ott),c("WdID")])) #unique ott-ids that don't have the same ncbi mapping in both wd and ott: 4377 -->after anti-join-4267
+WdZ2 <- nrow(unique(df.otol.wd[which(df.otol.wd$gbif.wd!=df.otol.wd$gbif),c("WdID")])) #unique ott-ids that don't have the same gbif mapping in both wd and ott: 64825 -->after anti-join-68770
 ##########################################Integration with data from otl#############################################
 
 
@@ -184,3 +217,7 @@ ottX <- nrow(unique(df.otol.wd[which(is.na(df.otol.wd$WdID)==TRUE & is.na(df.oto
 #gbif mapping. It also maps to ncbi
 #df.gbif <- getGbif()
 
+##temp
+#df.otol.wd1 <- full_join(data.frame(df.otol.wd),data.frame(df.otolZ), by=c("ncbi.wd"="ncbi"), suffix=c(".wd",".ott"), na_matches="never") #all wd ids mapping to 11 dbs, but also ott not matching to wd
+#df.otol.wd <- left_join(df.Wdfull,df.otolY, by=c("ott"="ott_id"), suffix=c(".wd",".ott"), na_matches="never") #all wd ids mapping to 11 dbs, but also ott not matching to wd
+##temp over
