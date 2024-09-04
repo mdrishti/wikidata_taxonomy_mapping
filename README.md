@@ -5,10 +5,13 @@ Ideally a big sparql query where a subject is a taxon and has a scientific name 
 
 A couple of R packages are required to run the scripts, mainly `WikidataQueryServiceR`, `glue`,`dplyr`, `tidyverse`, `httr`, `rotl`, `taxizedb`, and `dbplyr`.
 
-Run the script `Rscript --vanilla matchTaxonomy.R`
+Steps to perform:
 
-Download the input:[open tree of life taxonomy](https://tree.opentreeoflife.org/about/taxonomy-version/ott3.6)
- 
+a) Download the input:[open tree of life taxonomy](https://tree.opentreeoflife.org/about/taxonomy-version/ott3.6)
 
-Download the output files associated with these scripts can be found here (link coming soon).
+b) Run the script `Rscript --vanilla matchTaxonomy.R`
+
+The output files can also be downloaded [here](https://zenodo.org/doi/10.5281/zenodo.12725310) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12725311.svg)](https://doi.org/10.5281/zenodo.12725311)
+
+
 
