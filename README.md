@@ -11,7 +11,7 @@ a) Download the input:[open tree of life taxonomy](https://tree.opentreeoflife.o
 
 b) Run the script `Rscript --vanilla matchTaxonomy.R`
 
-The output files can also be downloaded [here](https://zenodo.org/doi/10.5281/zenodo.12725310) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12725311.svg)](https://doi.org/10.5281/zenodo.12725311)
+The old output files can also be downloaded [here](https://zenodo.org/doi/10.5281/zenodo.12725310) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12725311.svg)](https://doi.org/10.5281/zenodo.12725311). New files will be uploaded in a few days.
 
 
 
