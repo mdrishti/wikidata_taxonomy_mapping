@@ -8,8 +8,8 @@ source("taxonomy_functions.R")
 
 ##### APPROACH-1 using qlever ##########
 #############################################Combine mapping through qlever##########################################
-## query below fails on wikidata query service because more than 1 mio hits with the label service. Diff number of rows each time. Couldn't resolve it for now. So, used qlever.
-queryComb <- '	PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+## query below fails on wikidata query service because more than 1 mio hits with the label service. Diff number of rows each time. Couldn't resolve it for now. So, used qlever. variable kept for reference later.
+queryCombTemp <- '	PREFIX wdt: <http://www.wikidata.org/prop/direct/>
 		PREFIX wd: <http://www.wikidata.org/entity/>
 		SELECT ?WdID ?eol ?gbif ?ncbi ?ott ?itis ?irmng ?col ?nbn ?worms ?bold ?plazi ?apni ?WdName WHERE{ 
 		?WdID wdt:P31 wd:Q16521;
@@ -27,6 +27,8 @@ queryComb <- '	PREFIX wdt: <http://www.wikidata.org/prop/direct/>
 			        OPTIONAL { ?WdID wdt:P1992 ?plazi . }
 			        OPTIONAL { ?WdID wdt:P5984 ?apni . }
 		        }'
+with open('sparql_query.txt', 'r') as file:
+    queryComb = file.read()
 #using qlever
 df.Wdfull <- querki(queryComb)
 write.csv(df.Wdfull, "all_wd_eol_ncbi_gbif_andOthers_mapping_SPARQL.txt", row.names=FALSE)
