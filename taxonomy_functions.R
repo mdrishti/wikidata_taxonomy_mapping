@@ -5,7 +5,7 @@
 ###################################################################################################
 
 library(rotl) 
-library(taxizedb)
+#library(taxizedb)
 library(dplyr) 
 library(dbplyr)
 library(WikidataQueryServiceR)
