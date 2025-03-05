@@ -12,7 +12,7 @@ source("taxonomy_functions.R")
 queryComb <- '
 PREFIX wdt: <http://www.wikidata.org/prop/direct/>
 PREFIX wd: <http://www.wikidata.org/entity/>
-                SELECT ?WdID ?eol ?gbif ?ncbi ?ott ?itis ?irmng ?col ?nbn ?worms ?bold ?plazi ?apni ?msw3 ?iNat ?WdName WHERE{
+                SELECT ?WdID ?eol ?gbif ?ncbi ?ott ?itis ?irmng ?col ?nbn ?worms ?bold ?plazi ?apni ?msw3 ?iNat ?eppo ?WdName WHERE{
                 ?WdID wdt:P31 wd:Q16521;
                         wdt:P225 ?WdName .
                                 OPTIONAL { ?WdID wdt:P9157 ?ott . }
@@ -29,12 +29,13 @@ PREFIX wd: <http://www.wikidata.org/entity/>
                                 OPTIONAL { ?WdID wdt:P5984 ?apni . }
                                 OPTIONAL { ?WdID wdt:P959 ?msw3 . }
                                 OPTIONAL { ?WdID wdt:P3151 ?iNat . }
+                                OPTIONAL { ?WdID wdt:P3031 ?eppo . }
 		        }'
 #with open('sparql_query.txt', 'r') as file:
 #    queryComb = file.read()
 #using qlever
 df.Wdfull <- querki(queryComb)
-write.csv(df.Wdfull, "all_wd_eol_ncbi_gbif_andOthers_mapping_SPARQL_20250212.txt", row.names=FALSE)
+write.csv(df.Wdfull, "all_wd_eol_ncbi_gbif_andOthers_mapping_SPARQL_20250303.txt", row.names=FALSE)
 #############################################Combine mapping through qlever##########################################
 
 
