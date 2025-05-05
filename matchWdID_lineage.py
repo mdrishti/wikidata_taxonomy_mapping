@@ -3,8 +3,8 @@ import pandas as pd
 
 parser = argparse.ArgumentParser()
 parser.add_argument('wd_sparql_lineage_file', type=str, help="Enter the file which contains wikidata lineage")
-parser.add_argument('filtered_output_file', type=str, help="Enter output file name")
-parser.add_argument('output_file', type=str, help="Enter output file name")
+parser.add_argument('filtered_output_file', type=str, help="Enter output file name which will store data from lineage file only if the corresponding rank is available")
+parser.add_argument('output_file', type=str, help="Enter output file name which will store the ranks as columns in a lineage format")
 args = parser.parse_args()
 input_file = args.wd_sparql_lineage_file
 filtered_output_file = args.filtered_output_file
@@ -21,7 +21,7 @@ for chunk in pd.read_csv(input_file, chunksize=chunk_size):
         print(f"Error: Missing columns in chunk. Found: {list(chunk.columns)}")
         continue
     filtered_chunk = chunk[chunk["hTaxRank"].isin(predefined_ranks)]
-    mode = 'w' if first_chunk else 'a'
+    mode = 'w' if first_chunk else 'a' # append to file instead of write afresh
     header = first_chunk
     filtered_chunk.to_csv(filtered_output_file, mode=mode, header=header, index=False)
     first_chunk = False
